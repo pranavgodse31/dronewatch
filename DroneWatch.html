@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DroneWatch — Surveillance Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root{
+  --ink:#04060e;
+  --surface:#080c18;
+  --card:#0d1220;
+  --card2:#111826;
+  --border:#1a2238;
+  --border2:#232f45;
+  --cyan:#00d8ff;
+  --cyan2:#00aacf;
+  --green:#00ff99;
+  --red:#ff3355;
+  --amber:#ffb800;
+  --text:#b8cce4;
+  --muted:#4a6080;
+  --white:#e8f2ff;
+  --grad:linear-gradient(135deg,#00d8ff 0%,#00ff99 100%);
+  --gradR:linear-gradient(135deg,#00ff99 0%,#00d8ff 100%);
+  --shadow:0 0 60px rgba(0,216,255,.12);
+  --shadowG:0 0 60px rgba(0,255,153,.1);
+}
+
+/* ═══════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--ink);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:'Syne',sans-serif;border:none}
+input,textarea,select{font-family:'Syne',sans-serif}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px}
+
+/* Grid bg */
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(0,216,255,.025) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(0,216,255,.025) 60px);
+}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+#nav{
+  position:fixed;top:0;width:100%;z-index:900;
+  background:rgba(4,6,14,.9);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:0 2.5rem;height:62px;
+}
+.logo{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:1.05rem;letter-spacing:.14em;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  display:flex;align-items:center;gap:.6rem;cursor:pointer;user-select:none;
+}
+.nav-links{display:flex;align-items:center;gap:.1rem}
+.nav-links button{
+  background:none;color:var(--muted);
+  padding:.4rem .85rem;border-radius:7px;
+  font-size:.78rem;font-weight:600;letter-spacing:.07em;
+  transition:all .2s;
+}
+.nav-links button:hover,.nav-links button.active{
+  color:var(--cyan);background:rgba(0,216,255,.07);
+}
+.nav-r{display:flex;align-items:center;gap:.7rem}
+.cart-wrap{
+  position:relative;background:var(--card);
+  border:1px solid var(--border2);
+  color:var(--text);padding:.38rem .85rem;border-radius:8px;
+  font-size:.8rem;font-weight:600;
+  display:flex;align-items:center;gap:.45rem;
+  transition:all .2s;cursor:pointer;
+}
+.cart-wrap:hover{border-color:var(--cyan);color:var(--cyan)}
+.badge{
+  position:absolute;top:-7px;right:-7px;
+  background:var(--cyan);color:var(--ink);
+  width:18px;height:18px;border-radius:50%;
+  font-size:.62rem;font-weight:900;
+  display:none;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;
+}
+.btn-pri{
+  background:var(--grad);color:var(--ink);
+  padding:.42rem 1.15rem;border-radius:8px;
+  font-weight:700;font-size:.78rem;letter-spacing:.06em;
+  transition:all .2s;
+}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,216,255,.3)}
+.btn-out{
+  background:none;border:1px solid var(--cyan);color:var(--cyan);
+  padding:.4rem 1.1rem;border-radius:8px;
+  font-weight:600;font-size:.78rem;letter-spacing:.06em;
+  transition:all .2s;
+}
+.btn-out:hover{background:rgba(0,216,255,.08)}
+
+/* ═══════════════════════════════════════════
+   PAGE SYSTEM
+═══════════════════════════════════════════ */
+.page{display:none;padding-top:62px;min-height:100vh;position:relative;z-index:1}
+.page.on{display:block}
+
+/* ═══════════════════════════════════════════
+   HOME — HERO
+═══════════════════════════════════════════ */
+.hero{
+  min-height:calc(100vh - 62px);
+  display:flex;align-items:center;
+  padding:5rem 2.5rem 3rem;
+  max-width:1280px;margin:0 auto;gap:3rem;
+  position:relative;
+}
+.hero::after{
+  content:'';
+  position:absolute;right:-10%;top:10%;
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,216,255,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-left{flex:1;max-width:560px}
+.pill{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(0,216,255,.08);border:1px solid rgba(0,216,255,.2);
+  padding:.3rem .9rem;border-radius:100px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;color:var(--cyan);letter-spacing:.1em;
+  margin-bottom:1.6rem;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.hero h1{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(2.1rem,4.8vw,3.5rem);
+  line-height:1.06;color:var(--white);
+  margin-bottom:1.3rem;letter-spacing:-.01em;
+}
+.hero h1 em{
+  font-style:normal;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{
+  font-size:.97rem;color:var(--muted);line-height:1.75;
+  margin-bottom:2.2rem;max-width:450px;
+}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+.hero-btns .btn-pri{padding:.65rem 1.8rem;font-size:.88rem}
+.hero-btns .btn-out{padding:.62rem 1.6rem;font-size:.88rem}
+.stats-row{
+  display:flex;gap:2.5rem;
+  margin-top:3.5rem;padding-top:2rem;
+  border-top:1px solid var(--border);
+}
+.stat-n{
+  font-family:'Orbitron',sans-serif;font-size:1.55rem;font-weight:700;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.stat-l{font-size:.72rem;color:var(--muted);font-weight:600;letter-spacing:.08em;margin-top:.1rem}
+
+/* drone animation */
+.hero-right{flex:1;display:flex;justify-content:center;align-items:center;position:relative}
+.drone-scene{
+  width:360px;height:360px;position:relative;
+  animation:hover-drone 5s ease-in-out infinite;
+}
+@keyframes hover-drone{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(1deg)}}
+.ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(0,216,255,.12);
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  animation:expand 3s ease-out infinite;
+}
+.ring:nth-child(1){width:180px;height:180px;animation-delay:0s}
+.ring:nth-child(2){width:300px;height:300px;animation-delay:.8s}
+.ring:nth-child(3){width:420px;height:420px;animation-delay:1.6s}
+@keyframes expand{
+  0%{opacity:.5;transform:translate(-50%,-50%) scale(.85)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}
+}
+
+/* ═══════════════════════════════════════════
+   FEATURE STRIP
+═══════════════════════════════════════════ */
+.strip{
+  background:var(--card);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:1.8rem 2.5rem;
+}
+.strip-inner{
+  max-width:1280px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;
+}
+.strip-item{display:flex;align-items:center;gap:.9rem}
+.strip-icon{
+  width:44px;height:44px;border-radius:10px;flex-shrink:0;
+  background:rgba(0,216,255,.08);border:1px solid rgba(0,216,255,.18);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.strip-item h4{font-size:.82rem;font-weight:700;color:var(--white);margin-bottom:.1rem}
+.strip-item p{font-size:.72rem;color:var(--muted)}
+
+/* ═══════════════════════════════════════════
+   SECTION SHARED
+═══════════════════════════════════════════ */
+.sec{padding:5rem 2.5rem;max-width:1280px;margin:0 auto}
+.sec-head{text-align:center;margin-bottom:3rem}
+.sec-eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;color:var(--cyan);
+  letter-spacing:.22em;text-transform:uppercase;margin-bottom:.7rem;
+}
+.sec-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.6rem,3vw,2.3rem);font-weight:700;color:var(--white);
+}
+.sec-title em{
+  font-style:normal;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ═══════════════════════════════════════════
+   DRONE CARDS
+═══════════════════════════════════════════ */
+.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:1.5rem}
+
+.dcard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  transition:transform .3s,border-color .3s,box-shadow .3s;
+  cursor:default;
+}
+.dcard:hover{
+  transform:translateY(-5px);
+  border-color:rgba(0,216,255,.35);
+  box-shadow:var(--shadow);
+}
+.dcard-img{
+  height:190px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,rgba(0,216,255,.07) 0%,transparent 70%);
+  padding:1.5rem;position:relative;overflow:hidden;
+}
+.dcard-img::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(0,216,255,.012) 4px);
+}
+.dcard-badge{
+  position:absolute;top:.8rem;right:.8rem;
+  background:rgba(0,216,255,.14);border:1px solid rgba(0,216,255,.28);
+  padding:.22rem .55rem;border-radius:6px;
+  font-size:.65rem;font-family:'Orbitron',monospace;color:var(--cyan);font-weight:600;
+  z-index:1;
+}
+.dcard-body{padding:1.4rem}
+.dcard-cat{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.3rem;
+}
+.dcard-name{
+  font-family:'Orbitron',sans-serif;
+  font-size:.9rem;font-weight:700;color:var(--white);margin-bottom:.9rem;
+}
+.specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:1rem}
+.spec{
+  background:var(--surface);border-radius:7px;padding:.45rem .65rem;
+}
+.sk{font-size:.6rem;color:var(--muted);letter-spacing:.07em;margin-bottom:.12rem;font-family:'JetBrains Mono',monospace}
+.sv{font-size:.75rem;color:var(--cyan)}
+.price-row{display:flex;align-items:center;justify-content:space-between;margin-top:.8rem}
+.price{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:700;color:var(--green)}
+.price-old{font-size:.75rem;color:var(--muted);text-decoration:line-through;margin-left:.35rem}
+.disc{
+  background:rgba(0,255,153,.1);border:1px solid rgba(0,255,153,.25);
+  padding:.12rem .4rem;border-radius:4px;
+  font-size:.62rem;font-weight:700;color:var(--green);margin-left:.35rem;
+}
+.rating{display:flex;align-items:center;gap:.25rem;font-size:.75rem;color:var(--amber)}
+.dcard-foot{padding:.7rem 1.4rem 1.4rem;display:flex;gap:.7rem}
+.btn-cart-s{
+  flex:1;background:rgba(0,216,255,.09);
+  border:1px solid rgba(0,216,255,.28);color:var(--cyan);
+  padding:.55rem;border-radius:8px;font-size:.76rem;font-weight:600;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.35rem;
+}
+.btn-cart-s:hover{background:rgba(0,216,255,.18)}
+.btn-buy-s{
+  flex:1;background:var(--grad);border:none;color:var(--ink);
+  padding:.55rem;border-radius:8px;font-size:.76rem;font-weight:700;
+  transition:all .2s;
+}
+.btn-buy-s:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(0,216,255,.28)}
+
+/* ═══════════════════════════════════════════
+   TESTIMONIALS
+═══════════════════════════════════════════ */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:1.4rem}
+.tcard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:1.5rem;
+}
+.tstars{color:var(--amber);font-size:.88rem;margin-bottom:.8rem}
+.ttext{font-size:.84rem;color:var(--text);line-height:1.68;margin-bottom:1rem;font-style:italic}
+.tauthor{display:flex;align-items:center;gap:.75rem}
+.tavatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--grad);display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;color:var(--ink);flex-shrink:0;
+}
+.tname{font-weight:700;font-size:.8rem;color:var(--white)}
+.trole{font-size:.68rem;color:var(--muted);margin-top:.1rem}
+
+/* ═══════════════════════════════════════════
+   PRODUCTS PAGE
+═══════════════════════════════════════════ */
+.filter-row{
+  display:flex;align-items:center;gap:.7rem;
+  flex-wrap:wrap;margin-bottom:2rem;
+}
+.chip{
+  background:var(--card);border:1px solid var(--border);
+  color:var(--muted);padding:.35rem .85rem;border-radius:100px;
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.chip:hover,.chip.on{
+  background:rgba(0,216,255,.09);
+  border-color:rgba(0,216,255,.35);color:var(--cyan);
+}
+.searchbar{
+  margin-left:auto;background:var(--card);border:1px solid var(--border);
+  color:var(--text);padding:.4rem .95rem;border-radius:8px;
+  font-size:.78rem;outline:none;transition:border-color .2s;width:220px;
+}
+.searchbar:focus{border-color:var(--cyan)}
+.sorter{
+  background:var(--card);border:1px solid var(--border);
+  color:var(--text);padding:.38rem .75rem;border-radius:8px;
+  font-size:.75rem;cursor:pointer;outline:none;
+}
+
+/* ═══════════════════════════════════════════
+   ABOUT PAGE
+═══════════════════════════════════════════ */
+.about-banner{
+  background:linear-gradient(135deg,rgba(0,216,255,.05) 0%,transparent 60%);
+  border-bottom:1px solid var(--border);
+  text-align:center;padding:4.5rem 2.5rem 3rem;
+}
+.about-banner h1{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(1.9rem,4.5vw,3rem);color:var(--white);margin-bottom:.9rem;
+}
+.about-banner p{font-size:1rem;color:var(--muted);max-width:540px;margin:0 auto;line-height:1.72}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;margin-bottom:4rem}
+.num-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:2rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;
+}
+.num-cell{
+  text-align:center;padding:1.3rem;
+  background:var(--surface);border-radius:11px;
+}
+.num-n{
+  font-family:'Orbitron',sans-serif;font-size:1.9rem;font-weight:700;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.num-l{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.3rem;margin-top:2rem}
+.tmecard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:1.8rem 1.3rem;text-align:center;
+  transition:all .3s;
+}
+.tmecard:hover{border-color:rgba(0,255,153,.3);transform:translateY(-3px);box-shadow:var(--shadowG)}
+.tme-av{
+  width:74px;height:74px;border-radius:50%;margin:0 auto .9rem;
+  background:var(--gradR);display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:var(--ink);
+}
+.tme-name{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:.25rem}
+.tme-role{font-size:.72rem;color:var(--cyan)}
+.tme-bio{font-size:.74rem;color:var(--muted);margin-top:.5rem;line-height:1.55}
+.val-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1.2rem}
+.vcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem}
+.vic{font-size:1.7rem;margin-bottom:.7rem}
+.vtitle{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:.35rem}
+.vdesc{font-size:.79rem;color:var(--muted);line-height:1.6}
+
+/* ═══════════════════════════════════════════
+   CONTACT PAGE
+═══════════════════════════════════════════ */
+.contact-layout{display:grid;grid-template-columns:1fr 1.1fr;gap:3rem;align-items:start}
+.cinfo{display:flex;flex-direction:column;gap:1rem}
+.ccard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:11px;padding:1.1rem 1.4rem;
+  display:flex;align-items:center;gap:.9rem;
+}
+.cicon{font-size:1.3rem;flex-shrink:0}
+.clabel{font-size:.7rem;color:var(--muted);margin-bottom:.18rem;font-family:'JetBrains Mono',monospace;letter-spacing:.07em}
+.cval{font-size:.85rem;color:var(--white);font-weight:600}
+.cform{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:2rem;
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.fg{margin-bottom:.9rem}
+.flabel{
+  display:block;font-size:.73rem;font-weight:600;
+  color:var(--text);margin-bottom:.35rem;letter-spacing:.06em;
+}
+.finput{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--white);padding:.65rem .95rem;border-radius:8px;
+  font-size:.84rem;outline:none;transition:border-color .2s;
+}
+.finput:focus{border-color:var(--cyan)}
+textarea.finput{resize:vertical;min-height:115px}
+
+/* ═══════════════════════════════════════════
+   CART PAGE
+═══════════════════════════════════════════ */
+.cart-layout{display:grid;grid-template-columns:1fr 320px;gap:2rem;align-items:start}
+.cart-list{display:flex;flex-direction:column;gap:.9rem}
+.ci{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:1.1rem 1.2rem;
+  display:flex;gap:1.1rem;align-items:center;
+}
+.ci-img{
+  width:88px;height:66px;border-radius:8px;flex-shrink:0;
+  background:radial-gradient(ellipse at center,rgba(0,216,255,.1) 0%,transparent 70%);
+  display:flex;align-items:center;justify-content:center;
+}
+.ci-info{flex:1}
+.ci-name{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;color:var(--white);margin-bottom:.2rem}
+.ci-cat{font-size:.68rem;color:var(--muted)}
+.ci-price{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--green);margin-top:.35rem}
+.qty{display:flex;align-items:center;gap:.5rem}
+.qbtn{
+  width:26px;height:26px;border-radius:6px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;
+}
+.qbtn:hover{border-color:var(--cyan);color:var(--cyan)}
+.qval{
+  font-family:'Orbitron',sans-serif;
+  font-size:.82rem;width:22px;text-align:center;color:var(--white);
+}
+.rmbtn{
+  background:none;border:none;color:var(--muted);
+  font-size:1rem;cursor:pointer;padding:.3rem;transition:color .2s;
+}
+.rmbtn:hover{color:var(--red)}
+.summary{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:15px;padding:1.5rem;position:sticky;top:78px;
+}
+.summary h3{
+  font-family:'Orbitron',sans-serif;font-size:.9rem;
+  font-weight:700;color:var(--white);margin-bottom:1.2rem;
+}
+.srow{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.65rem;color:var(--muted)}
+.srow.total{
+  font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--white);
+  border-top:1px solid var(--border);padding-top:.65rem;margin-top:.2rem;
+}
+.srow.total span:last-child{color:var(--green)}
+.chk-btn{
+  width:100%;background:var(--grad);border:none;color:var(--ink);
+  padding:.8rem;border-radius:9px;
+  font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;
+  cursor:pointer;margin-top:1.1rem;letter-spacing:.07em;
+  transition:all .2s;
+}
+.chk-btn:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(0,216,255,.3)}
+.empty{text-align:center;padding:5rem 2rem}
+.empty p{font-size:1.05rem;color:var(--muted);margin-bottom:1.4rem}
+
+/* ═══════════════════════════════════════════
+   ORDERS PAGE
+═══════════════════════════════════════════ */
+.ocard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:1.4rem;margin-bottom:1rem;
+}
+.ohead{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem}
+.oid{font-family:'Orbitron',sans-serif;font-size:.78rem;color:var(--cyan)}
+.ostatus{
+  padding:.22rem .65rem;border-radius:100px;
+  font-size:.67rem;font-weight:700;
+  background:rgba(0,255,153,.09);border:1px solid rgba(0,255,153,.25);color:var(--green);
+  font-family:'Orbitron',sans-serif;
+}
+.oitems{font-size:.8rem;color:var(--muted)}
+.ototal{
+  font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:700;
+  color:var(--green);margin-top:.65rem;text-align:right;
+}
+
+/* ═══════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+  animation:fin .18s ease;
+}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:2.4rem;width:100%;max-width:430px;
+  position:relative;animation:sup .28s ease;
+}
+@keyframes sup{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mclose{
+  position:absolute;top:.9rem;right:1rem;
+  background:none;border:none;color:var(--muted);
+  font-size:1.5rem;cursor:pointer;line-height:1;
+}
+.mclose:hover{color:var(--white)}
+.mlogo{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:.95rem;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-align:center;margin-bottom:.3rem;letter-spacing:.12em;
+}
+.mtitle{font-size:1.15rem;font-weight:700;color:var(--white);text-align:center;margin-bottom:.35rem}
+.msub{font-size:.79rem;color:var(--muted);text-align:center;margin-bottom:1.7rem}
+.atoggle{text-align:center;margin-top:.9rem;font-size:.79rem;color:var(--muted)}
+.atoggle span{color:var(--cyan);cursor:pointer;font-weight:600}
+.atoggle span:hover{text-decoration:underline}
+.errmsg{color:var(--red);font-size:.75rem;margin-bottom:.4rem;display:none}
+.demo-hint{
+  text-align:center;margin-top:.6rem;
+  font-size:.7rem;color:var(--muted);
+  font-family:'JetBrains Mono',monospace;
+}
+/* checkout modal */
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:.9rem 0}
+.pm{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:.65rem;text-align:center;
+  font-size:.75rem;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:all .2s;
+}
+.pm:hover,.pm.sel{border-color:var(--cyan);color:var(--cyan);background:rgba(0,216,255,.07)}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:1.4rem;right:1.4rem;z-index:2000;
+  background:var(--card2);border:1px solid var(--border2);
+  padding:.75rem 1.15rem;border-radius:10px;
+  font-size:.8rem;color:var(--white);
+  display:none;align-items:center;gap:.55rem;
+  animation:slideR .28s ease;
+  box-shadow:0 8px 30px rgba(0,0,0,.45);max-width:310px;
+}
+@keyframes slideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
+#toast.ok{border-color:rgba(0,255,153,.35)}
+#toast.err{border-color:rgba(255,51,85,.35)}
+
+/* ═══════════════════════════════════════════
+   PROFILE PAGE
+═══════════════════════════════════════════ */
+.prof-layout{display:grid;grid-template-columns:260px 1fr;gap:2rem;align-items:start}
+.prof-side{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:2rem;text-align:center;
+}
+.prof-av{
+  width:90px;height:90px;border-radius:50%;margin:0 auto .9rem;
+  background:var(--grad);display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:700;color:var(--ink);
+}
+.prof-name{font-family:'Orbitron',sans-serif;font-size:.92rem;font-weight:700;color:var(--white);margin-bottom:.2rem}
+.prof-email{font-size:.76rem;color:var(--muted)}
+.pmenu{margin-top:1.4rem;display:flex;flex-direction:column;gap:.35rem}
+.pitem{
+  padding:.55rem .9rem;border-radius:8px;font-size:.8rem;
+  cursor:pointer;transition:all .2s;text-align:left;color:var(--muted);
+  background:none;border:none;display:flex;align-items:center;gap:.6rem;width:100%;
+}
+.pitem:hover,.pitem.on{background:rgba(0,216,255,.07);color:var(--cyan)}
+.prof-content{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:2rem;
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer{
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  padding:4rem 2.5rem 2rem;
+  position:relative;z-index:1;
+}
+.fg-grid{
+  max-width:1280px;margin:0 auto;
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem;
+  margin-bottom:2.8rem;
+}
+.fbrand p{font-size:.79rem;color:var(--muted);line-height:1.72;margin-top:.7rem;max-width:240px}
+.fcol h4{
+  font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;
+  color:var(--white);letter-spacing:.12em;margin-bottom:.9rem;
+}
+.fcol a{display:block;font-size:.79rem;color:var(--muted);margin-bottom:.42rem;transition:color .2s;cursor:pointer}
+.fcol a:hover{color:var(--cyan)}
+.fbot{
+  max-width:1280px;margin:0 auto;
+  border-top:1px solid var(--border);padding-top:1.4rem;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.74rem;color:var(--muted);
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:960px){
+  .hero{flex-direction:column;text-align:center;padding:4rem 1.5rem 2rem}
+  .hero p,.hero-btns{justify-content:center}
+  .stats-row{justify-content:center}
+  .hero-right{display:none}
+  .strip-inner{grid-template-columns:1fr 1fr}
+  .two-col,.cart-layout,.contact-layout,.prof-layout{grid-template-columns:1fr}
+  .fg-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  #nav{padding:0 1rem}
+  .nav-links{display:none}
+  .strip-inner{grid-template-columns:1fr}
+  .fg-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ████████████ NAV ████████████ -->
+<nav id="nav">
+  <div class="logo" onclick="go('home')">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="2.5" fill="#00d8ff"/>
+      <line x1="12" y1="3" x2="12" y2="21" stroke="#00d8ff" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="3" y1="12" x2="21" y2="12" stroke="#00d8ff" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="12" cy="3" r="1.8" fill="#00d8ff"/>
+      <circle cx="12" cy="21" r="1.8" fill="#00d8ff"/>
+      <circle cx="3" cy="12" r="1.8" fill="#00d8ff"/>
+      <circle cx="21" cy="12" r="1.8" fill="#00d8ff"/>
+      <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" stroke="#00ff99" stroke-width=".9" stroke-linecap="round" opacity=".5"/>
+      <line x1="18.5" y1="5.5" x2="5.5" y2="18.5" stroke="#00ff99" stroke-width=".9" stroke-linecap="round" opacity=".5"/>
+    </svg>
+    DRONEWATCH
+  </div>
+  <div class="nav-links">
+    <button id="nb-home" class="active" onclick="go('home')">Home</button>
+    <button id="nb-products" onclick="go('products')">Products</button>
+    <button id="nb-about" onclick="go('about')">About Us</button>
+    <button id="nb-contact" onclick="go('contact')">Support</button>
+    <button id="nb-orders" onclick="go('orders')">Orders</button>
+  </div>
+  <div class="nav-r">
+    <div class="cart-wrap" onclick="go('cart')">
+      🛒 Cart
+      <span class="badge" id="cbadge">0</span>
+    </div>
+    <div id="auth-area">
+      <button class="btn-out" onclick="openAuth('login')">Login</button>
+      <button class="btn-pri" onclick="openAuth('register')" style="margin-left:.5rem">Sign Up</button>
+    </div>
+    <div id="user-area" style="display:none">
+      <button class="btn-out" onclick="go('profile')" id="uname-btn">👤 User</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ████████████ HOME ████████████ -->
+<div id="home" class="page on">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="pill"><div class="dot"></div>SURVEILLANCE NETWORK ONLINE</div>
+      <h1>Advanced <em>Drone</em><br/>Surveillance<br/>Technology</h1>
+      <p>Military-grade aerial intelligence, now engineered for enterprise security, smart cities, border patrol, and critical infrastructure monitoring.</p>
+      <div class="hero-btns">
+        <button class="btn-pri" onclick="go('products')">Explore Fleet →</button>
+        <button class="btn-out" onclick="go('about')">Our Mission</button>
+      </div>
+      <div class="stats-row">
+        <div><div class="stat-n">500+</div><div class="stat-l">Deployments</div></div>
+        <div><div class="stat-n">40km</div><div class="stat-l">Max Range</div></div>
+        <div><div class="stat-n">99.7%</div><div class="stat-l">Uptime SLA</div></div>
+        <div><div class="stat-n">24/7</div><div class="stat-l">Support</div></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="drone-scene">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <svg width="360" height="360" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 40px rgba(0,216,255,.38))">
+          <!-- Body -->
+          <rect x="148" y="162" width="64" height="36" rx="12" fill="#0d1522" stroke="#00d8ff" stroke-width="2"/>
+          <circle cx="180" cy="180" r="14" fill="#080e18" stroke="#00d8ff" stroke-width="1.5"/>
+          <circle cx="180" cy="180" r="6" fill="#00d8ff" opacity=".6"/>
+          <!-- Arms -->
+          <line x1="150" y1="170" x2="82" y2="118" stroke="#1a2e4a" stroke-width="5" stroke-linecap="round"/>
+          <line x1="210" y1="170" x2="278" y2="118" stroke="#1a2e4a" stroke-width="5" stroke-linecap="round"/>
+          <line x1="150" y1="190" x2="82" y2="242" stroke="#1a2e4a" stroke-width="5" stroke-linecap="round"/>
+          <line x1="210" y1="190" x2="278" y2="242" stroke="#1a2e4a" stroke-width="5" stroke-linecap="round"/>
+          <!-- Rotors front -->
+          <ellipse cx="82" cy="116" rx="38" ry="9" fill="none" stroke="#00d8ff" stroke-width="2" opacity=".85"/>
+          <ellipse cx="278" cy="116" rx="38" ry="9" fill="none" stroke="#00d8ff" stroke-width="2" opacity=".85"/>
+          <!-- Rotors rear -->
+          <ellipse cx="82" cy="244" rx="38" ry="9" fill="none" stroke="#00ff99" stroke-width="2" opacity=".85"/>
+          <ellipse cx="278" cy="244" rx="38" ry="9" fill="none" stroke="#00ff99" stroke-width="2" opacity=".85"/>
+          <!-- Motor hubs -->
+          <circle cx="82" cy="116" r="8" fill="#00d8ff" opacity=".55"/>
+          <circle cx="278" cy="116" r="8" fill="#00d8ff" opacity=".55"/>
+          <circle cx="82" cy="244" r="8" fill="#00ff99" opacity=".55"/>
+          <circle cx="278" cy="244" r="8" fill="#00ff99" opacity=".55"/>
+          <!-- Gimbal camera -->
+          <rect x="168" y="192" width="24" height="15" rx="4" fill="#080e18" stroke="#00d8ff" stroke-width="1.2"/>
+          <circle cx="180" cy="199" r="5.5" fill="#00d8ff" opacity=".4"/>
+          <!-- Signal arcs -->
+          <path d="M166 156 Q180 148 194 156" stroke="#00ff99" stroke-width="1.5" fill="none" opacity=".7"/>
+          <path d="M160 150 Q180 140 200 150" stroke="#00ff99" stroke-width="1.2" fill="none" opacity=".4"/>
+          <!-- LEDs -->
+          <circle cx="82" cy="116" r="4" fill="#00d8ff"/>
+          <circle cx="278" cy="116" r="4" fill="#00d8ff"/>
+          <circle cx="82" cy="244" r="4" fill="#00ff99"/>
+          <circle cx="278" cy="244" r="4" fill="#00ff99"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRIP -->
+  <div class="strip">
+    <div class="strip-inner">
+      <div class="strip-item"><div class="strip-icon">🛡️</div><div><h4>Military Grade</h4><p>Defense-level build quality</p></div></div>
+      <div class="strip-item"><div class="strip-icon">📡</div><div><h4>80km Range</h4><p>Industry-leading transmission</p></div></div>
+      <div class="strip-item"><div class="strip-icon">🤖</div><div><h4>AI-Powered</h4><p>Autonomous threat detection</p></div></div>
+      <div class="strip-item"><div class="strip-icon">🔧</div><div><h4>24/7 Support</h4><p>Dedicated technical team</p></div></div>
+    </div>
+  </div>
+
+  <!-- FEATURED -->
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-eyebrow">// FEATURED SYSTEMS</div>
+      <h2 class="sec-title">Top <em>Surveillance</em> Drones</h2>
+    </div>
+    <div class="grid-3" id="featured-grid"></div>
+    <div style="text-align:center;margin-top:2.5rem">
+      <button class="btn-out" onclick="go('products')" style="padding:.65rem 2rem;font-size:.88rem">View Full Catalog →</button>
+    </div>
+  </div>
+
+  <!-- TESTIMONIALS -->
+  <div style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5rem 0">
+    <div class="sec" style="padding:0 2.5rem">
+      <div class="sec-head">
+        <div class="sec-eyebrow">// CLIENT REVIEWS</div>
+        <h2 class="sec-title">Trusted by <em>Security Pros</em></h2>
+      </div>
+      <div class="tgrid">
+        <div class="tcard"><div class="tstars">★★★★★</div><p class="ttext">"The SkyWatch Pro X1 transformed our perimeter security. AI detection alone prevented 3 intrusions in the first month of deployment."</p><div class="tauthor"><div class="tavatar">RK</div><div><div class="tname">Rajesh Kumar</div><div class="trole">Head of Security, TechPark Bangalore</div></div></div></div>
+        <div class="tcard"><div class="tstars">★★★★★</div><p class="ttext">"Exceptional thermal imaging and build quality. The NightHawk Recon runs 24/7 on our border patrol routes without a single failure."</p><div class="tauthor"><div class="tavatar">PM</div><div><div class="tname">Priya Mehta</div><div class="trole">Operations Director, SafeZone Pvt Ltd</div></div></div></div>
+        <div class="tcard"><div class="tstars">★★★★★</div><p class="ttext">"TitanEye Command gave us complete aerial visibility of all 5 campuses simultaneously. The autonomous patrol feature is a game-changer."</p><div class="tauthor"><div class="tavatar">AS</div><div><div class="tname">Arjun Singh</div><div class="trole">CTO, SmartCity Mumbai</div></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████████████ PRODUCTS ████████████ -->
+<div id="products" class="page">
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-eyebrow">// PRODUCT CATALOG</div>
+      <h2 class="sec-title">Surveillance <em>Drone Fleet</em></h2>
+    </div>
+    <div class="filter-row">
+      <button class="chip on" onclick="filterBy('All',this)">All</button>
+      <button class="chip" onclick="filterBy('Surveillance',this)">Surveillance</button>
+      <button class="chip" onclick="filterBy('Military Grade',this)">Military Grade</button>
+      <button class="chip" onclick="filterBy('Night Ops',this)">Night Ops</button>
+      <button class="chip" onclick="filterBy('Compact',this)">Compact</button>
+      <button class="chip" onclick="filterBy('Enterprise',this)">Enterprise</button>
+      <input type="text" class="searchbar" placeholder="🔍 Search drones..." oninput="searchBy(this.value)"/>
+      <select class="sorter" onchange="sortBy(this.value)">
+        <option value="">Sort by</option>
+        <option value="asc">Price ↑</option>
+        <option value="desc">Price ↓</option>
+        <option value="rate">Top Rated</option>
+      </select>
+    </div>
+    <div class="grid-3" id="products-grid"></div>
+  </div>
+</div>
+
+<!-- ████████████ ABOUT ████████████ -->
+<div id="about" class="page">
+  <div class="about-banner">
+    <div class="sec-eyebrow">// OUR STORY</div>
+    <h1>Redefining <span style="background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Aerial Intelligence</span></h1>
+    <p>Founded in 2019, DroneWatch engineers surveillance solutions that protect lives, secure borders, and make cities smarter — without compromise.</p>
+  </div>
+  <div class="sec">
+    <div class="two-col" style="margin-bottom:4rem">
+      <div>
+        <div class="sec-eyebrow">// MISSION</div>
+        <h2 class="sec-title" style="text-align:left;margin-bottom:1rem">Built for the <em>Frontline</em></h2>
+        <p style="color:var(--muted);line-height:1.82;margin-bottom:1rem">DroneWatch develops surveillance platforms for security agencies, smart city programs, event organizers, and enterprise facilities. Our drones are engineered with AI-driven threat detection, end-to-end encrypted live streaming, and all-weather airframes.</p>
+        <p style="color:var(--muted);line-height:1.82">We believe advanced aerial intelligence should be standard security infrastructure — not a privilege reserved for massive defense budgets.</p>
+      </div>
+      <div class="num-box">
+        <div class="num-cell"><div class="num-n">500+</div><div class="num-l">Active Deployments</div></div>
+        <div class="num-cell"><div class="num-n">28</div><div class="num-l">Countries Served</div></div>
+        <div class="num-cell"><div class="num-n">12</div><div class="num-l">Patents Held</div></div>
+        <div class="num-cell"><div class="num-n">99.7%</div><div class="num-l">Uptime SLA</div></div>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div class="sec-eyebrow">// LEADERSHIP</div>
+      <h2 class="sec-title">Meet the <em>Team</em></h2>
+    </div>
+    <div class="team-grid">
+      <div class="tmecard"><div class="tme-av">AV</div><div class="tme-name">Aryan Verma</div><div class="tme-role">CEO & Co-Founder</div><div class="tme-bio">15 years in aerospace defense. Former ISRO researcher with 3 patents in autonomous navigation.</div></div>
+      <div class="tmecard"><div class="tme-av">SP</div><div class="tme-name">Sneha Pillai</div><div class="tme-role">CTO</div><div class="tme-bio">AI/ML expert. PhD in Computer Vision from IIT Bombay. Built our real-time threat detection engine.</div></div>
+      <div class="tmecard"><div class="tme-av">MR</div><div class="tme-name">Manav Rao</div><div class="tme-role">Head of Hardware</div><div class="tme-bio">10+ years designing aerial platforms. Led development of our IP67-rated all-weather airframe.</div></div>
+      <div class="tmecard"><div class="tme-av">DK</div><div class="tme-name">Divya Kapoor</div><div class="tme-role">VP Sales & Partnerships</div><div class="tme-bio">Built enterprise relationships across South Asia, Middle East, and Southeast Asia.</div></div>
+    </div>
+
+    <div style="margin-top:4.5rem">
+      <div class="sec-head">
+        <div class="sec-eyebrow">// VALUES</div>
+        <h2 class="sec-title">What We <em>Stand For</em></h2>
+      </div>
+      <div class="val-grid">
+        <div class="vcard"><div class="vic">🎯</div><div class="vtitle">Precision Engineering</div><div class="vdesc">Every component tested to military tolerances. Zero compromises on reliability or performance.</div></div>
+        <div class="vcard"><div class="vic">🔒</div><div class="vtitle">Privacy by Design</div><div class="vdesc">End-to-end encryption, GDPR compliance tools, and strict data handling policies built in.</div></div>
+        <div class="vcard"><div class="vic">🌏</div><div class="vtitle">Global Reach</div><div class="vdesc">Deployments in 28 countries with local compliance, certification, and trained support partners.</div></div>
+        <div class="vcard"><div class="vic">⚡</div><div class="vtitle">Rapid Innovation</div><div class="vdesc">New AI models and firmware pushed quarterly. Your drone gets smarter without hardware changes.</div></div>
+        <div class="vcard"><div class="vic">🤝</div><div class="vtitle">Partnership Model</div><div class="vdesc">Training, integration support, and SLA-backed service contracts for every enterprise client.</div></div>
+        <div class="vcard"><div class="vic">♻️</div><div class="vtitle">Sustainable Tech</div><div class="vdesc">Solar charging stations, recyclable materials, and carbon-neutral operations roadmap by 2026.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████████████ CONTACT ████████████ -->
+<div id="contact" class="page">
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-eyebrow">// SUPPORT CENTER</div>
+      <h2 class="sec-title">Get in <em>Touch</em></h2>
+    </div>
+    <div class="contact-layout">
+      <div>
+        <div class="cinfo" style="margin-bottom:2rem">
+          <div class="ccard"><span class="cicon">📞</span><div><div class="clabel">PHONE SUPPORT</div><div class="cval">+91 98765 43210</div></div></div>
+          <div class="ccard"><span class="cicon">✉️</span><div><div class="clabel">EMAIL</div><div class="cval">support@dronewatch.in</div></div></div>
+          <div class="ccard"><span class="cicon">📍</span><div><div class="clabel">HEADQUARTERS</div><div class="cval">Bandra Kurla Complex, Mumbai 400051</div></div></div>
+          <div class="ccard"><span class="cicon">🕐</span><div><div class="clabel">WORKING HOURS</div><div class="cval">Mon–Sat · 9AM – 7PM IST</div></div></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem">
+          <h4 style="font-family:'Orbitron',sans-serif;font-size:.78rem;color:var(--white);margin-bottom:.9rem">QUICK LINKS</h4>
+          <div style="display:flex;flex-direction:column;gap:.45rem">
+            <a href="#" style="color:var(--muted);font-size:.8rem;transition:color .2s" onmouseover="this.style.color='#00d8ff'" onmouseout="this.style.color='#4a6080'">→ Download User Manual</a>
+            <a href="#" style="color:var(--muted);font-size:.8rem;transition:color .2s" onmouseover="this.style.color='#00d8ff'" onmouseout="this.style.color='#4a6080'">→ Firmware Update Guide</a>
+            <a href="#" style="color:var(--muted);font-size:.8rem;transition:color .2s" onmouseover="this.style.color='#00d8ff'" onmouseout="this.style.color='#4a6080'">→ Warranty Registration</a>
+            <a href="#" style="color:var(--muted);font-size:.8rem;transition:color .2s" onmouseover="this.style.color='#00d8ff'" onmouseout="this.style.color='#4a6080'">→ Schedule a Demo</a>
+            <a href="#" style="color:var(--muted);font-size:.8rem;transition:color .2s" onmouseover="this.style.color='#00d8ff'" onmouseout="this.style.color='#4a6080'">→ Enterprise / Bulk Pricing</a>
+          </div>
+        </div>
+      </div>
+      <div class="cform">
+        <h3 style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--white);margin-bottom:1.4rem">Send Us a Message</h3>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">Your Name</label><input type="text" class="finput" id="cn" placeholder="Rajesh Kumar"/></div>
+          <div class="fg"><label class="flabel">Email</label><input type="email" class="finput" id="ce" placeholder="you@email.com"/></div>
+        </div>
+        <div class="fg">
+          <label class="flabel">Subject</label>
+          <select class="finput" id="cs">
+            <option value="">Select a topic</option>
+            <option>Technical Support</option>
+            <option>Sales Inquiry</option>
+            <option>Warranty Claim</option>
+            <option>Bulk Order</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flabel">Message</label><textarea class="finput" id="cm" rows="5" placeholder="Describe your issue or inquiry..."></textarea></div>
+        <button class="btn-pri" onclick="sendContact()" style="width:100%;padding:.78rem;font-size:.88rem">Send Message →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████████████ CART ████████████ -->
+<div id="cart" class="page">
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-eyebrow">// SHOPPING CART</div>
+      <h2 class="sec-title">Your <em>Cart</em></h2>
+    </div>
+    <div id="cart-content"></div>
+  </div>
+</div>
+
+<!-- ████████████ ORDERS ████████████ -->
+<div id="orders" class="page">
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-eyebrow">// ORDER HISTORY</div>
+      <h2 class="sec-title">My <em>Orders</em></h2>
+    </div>
+    <div id="orders-content"></div>
+  </div>
+</div>
+
+<!-- ████████████ PROFILE ████████████ -->
+<div id="profile" class="page">
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-eyebrow">// ACCOUNT</div>
+      <h2 class="sec-title">My <em>Profile</em></h2>
+    </div>
+    <div class="prof-layout">
+      <div class="prof-side">
+        <div class="prof-av" id="pav">U</div>
+        <div class="prof-name" id="pname">User</div>
+        <div class="prof-email" id="pemail">user@dronewatch.com</div>
+        <div class="pmenu">
+          <button class="pitem on">👤 Account Info</button>
+          <button class="pitem" onclick="go('orders')">📦 My Orders</button>
+          <button class="pitem" onclick="go('cart')">🛒 Cart</button>
+          <button class="pitem" onclick="logout()" style="color:var(--red)">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="prof-content">
+        <h3 style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--white);margin-bottom:1.4rem">Account Information</h3>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">Full Name</label><input type="text" class="finput" id="pf-name"/></div>
+          <div class="fg"><label class="flabel">Email</label><input type="email" class="finput" id="pf-email" readonly/></div>
+        </div>
+        <div class="fg"><label class="flabel">Phone Number</label><input type="tel" class="finput" id="pf-phone" placeholder="+91 XXXXX XXXXX"/></div>
+        <div style="margin-top:1rem;padding:.9rem 1rem;background:var(--surface);border-radius:9px;border:1px solid var(--border)">
+          <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem;font-family:'JetBrains Mono',monospace;letter-spacing:.07em">MEMBER SINCE</div>
+          <div id="pf-since" style="font-size:.84rem;color:var(--white)">2024</div>
+        </div>
+        <button class="btn-pri" onclick="toast('Profile updated! ✔','ok')" style="margin-top:1.4rem;padding:.65rem 1.5rem">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████████████ FOOTER ████████████ -->
+<footer>
+  <div class="fg-grid">
+    <div class="fbrand">
+      <div class="logo" style="cursor:default">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2.5" fill="#00d8ff"/><line x1="12" y1="3" x2="12" y2="21" stroke="#00d8ff" stroke-width="1.4" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke="#00d8ff" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="3" r="1.8" fill="#00d8ff"/><circle cx="12" cy="21" r="1.8" fill="#00d8ff"/><circle cx="3" cy="12" r="1.8" fill="#00d8ff"/><circle cx="21" cy="12" r="1.8" fill="#00d8ff"/></svg>
+        DRONEWATCH
+      </div>
+      <p>India's premier drone surveillance platform. Built for security professionals, deployed at scale across 28 countries.</p>
+    </div>
+    <div class="fcol">
+      <h4>Products</h4>
+      <a onclick="go('products')">Surveillance Drones</a>
+      <a onclick="go('products')">Military Grade</a>
+      <a onclick="go('products')">Night Operations</a>
+      <a onclick="go('products')">Enterprise Fleet</a>
+    </div>
+    <div class="fcol">
+      <h4>Company</h4>
+      <a onclick="go('about')">About Us</a>
+      <a onclick="go('contact')">Contact</a>
+      <a>Careers</a>
+      <a>Press</a>
+    </div>
+    <div class="fcol">
+      <h4>Support</h4>
+      <a onclick="go('contact')">Help Center</a>
+      <a>Documentation</a>
+      <a>Warranty</a>
+      <a>Returns Policy</a>
+    </div>
+  </div>
+  <div class="fbot">
+    <span>© 2024 DroneWatch Technologies Pvt. Ltd. — Mumbai, India</span>
+    <span>Privacy · Terms · Compliance</span>
+  </div>
+</footer>
+
+<!-- ████████████ AUTH MODAL ████████████ -->
+<div id="auth-modal" style="display:none" class="overlay">
+  <div class="modal">
+    <button class="mclose" onclick="closeModal('auth-modal')">×</button>
+    <div class="mlogo">⬡ DRONEWATCH</div>
+    <!-- LOGIN -->
+    <div id="login-pane">
+      <div class="mtitle">Welcome Back</div>
+      <div class="msub">Sign in to your DroneWatch account</div>
+      <div class="fg"><label class="flabel">Email Address</label><input type="email" class="finput" id="le" placeholder="you@email.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="fg"><label class="flabel">Password</label><input type="password" class="finput" id="lp" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="errmsg" id="lerr"></div>
+      <button class="btn-pri" onclick="doLogin()" style="width:100%;padding:.78rem;margin-top:.3rem">Sign In →</button>
+      <div class="demo-hint">Demo: demo@dronewatch.com / demo123</div>
+      <div class="atoggle">No account? <span onclick="switchAuth('register')">Sign Up</span></div>
+    </div>
+    <!-- REGISTER -->
+    <div id="reg-pane" style="display:none">
+      <div class="mtitle">Create Account</div>
+      <div class="msub">Join the DroneWatch ecosystem</div>
+      <div class="form-row">
+        <div class="fg"><label class="flabel">Full Name</label><input type="text" class="finput" id="rn" placeholder="Rajesh Kumar"/></div>
+        <div class="fg"><label class="flabel">Phone</label><input type="tel" class="finput" id="rph" placeholder="+91 XXXXX"/></div>
+      </div>
+      <div class="fg"><label class="flabel">Email</label><input type="email" class="finput" id="re" placeholder="you@email.com"/></div>
+      <div class="fg"><label class="flabel">Password</label><input type="password" class="finput" id="rp" placeholder="Min 6 characters"/></div>
+      <div class="errmsg" id="rerr"></div>
+      <button class="btn-pri" onclick="doRegister()" style="width:100%;padding:.78rem;margin-top:.3rem">Create Account →</button>
+      <div class="atoggle">Have an account? <span onclick="switchAuth('login')">Sign In</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ████████████ CHECKOUT MODAL ████████████ -->
+<div id="co-modal" style="display:none" class="overlay">
+  <div class="modal" style="max-width:500px">
+    <button class="mclose" onclick="closeModal('co-modal')">×</button>
+    <div class="mtitle" style="margin-bottom:1.4rem">Complete Your Order</div>
+    <div class="fg"><label class="flabel">Delivery Address</label><textarea class="finput" id="co-addr" rows="3" placeholder="House/Flat, Street, City, State, PIN Code"></textarea></div>
+    <div class="fg">
+      <label class="flabel">Payment Method</label>
+      <div class="pay-grid">
+        <div class="pm sel" onclick="selPay(this,'COD')">💵 COD</div>
+        <div class="pm" onclick="selPay(this,'UPI')">📱 UPI</div>
+        <div class="pm" onclick="selPay(this,'Card')">💳 Card</div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:9px;padding:.9rem 1rem;margin-bottom:.9rem">
+      <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:.3rem">
+        <span>Order Total</span>
+        <span id="co-total" style="color:var(--green);font-family:'Orbitron',sans-serif;font-weight:700"></span>
+      </div>
+      <div style="font-size:.68rem;color:var(--muted)">Includes 18% GST · Free shipping above ₹1,00,000 · Delivery in 5–7 business days</div>
+    </div>
+    <button class="chk-btn" onclick="placeOrder()">⬡ CONFIRM &amp; PLACE ORDER</button>
+  </div>
+</div>
+
+<!-- ████████████ TOAST ████████████ -->
+<div id="toast"></div>
+
+<!-- ████████████ SCRIPT ████████████ -->
+<script>
+/* ─── DATA ───────────────────────────────────────────────────── */
+const DRONES = [
+  {id:1,name:'SkyWatch Pro X1',cat:'Surveillance',price:89999,orig:119999,badge:'Best Seller',specs:{Range:'15 km',Battery:'45 min',Camera:'4K HDR',Weight:'1.2 kg'},rating:4.8,reviews:142,desc:'Professional-grade surveillance with AI threat detection and night vision.'},
+  {id:2,name:'AerialGuard Ultra',cat:'Military Grade',price:249999,orig:289999,badge:'Pro Choice',specs:{Range:'40 km',Battery:'90 min',Camera:'8K Thermal',Weight:'3.5 kg'},rating:4.9,reviews:89,desc:'Military-grade platform with encrypted comms and advanced thermal imaging.'},
+  {id:3,name:'NightHawk Recon',cat:'Night Ops',price:149999,orig:179999,badge:'Night Spec',specs:{Range:'25 km',Battery:'60 min',Camera:'4K IR',Weight:'2.1 kg'},rating:4.7,reviews:67,desc:'Optimised for low-light surveillance with IR LEDs and ultra-sensitive sensors.'},
+  {id:4,name:'SwarmEye Mini',cat:'Compact',price:39999,orig:49999,badge:'Best Value',specs:{Range:'8 km',Battery:'30 min',Camera:'1080p',Weight:'0.5 kg'},rating:4.5,reviews:231,desc:'Compact and agile — ideal for indoor environments and urban spaces.'},
+  {id:5,name:'TitanEye Command',cat:'Enterprise',price:499999,orig:599999,badge:'Enterprise',specs:{Range:'80 km',Battery:'180 min',Camera:'12K Multi',Weight:'8.2 kg'},rating:5.0,reviews:34,desc:'Enterprise command drone with multi-sensor fusion and autonomous patrol.'},
+  {id:6,name:'BorderPatrol X3',cat:'Border Security',price:319999,orig:369999,badge:'Security Pro',specs:{Range:'55 km',Battery:'120 min',Camera:'6K+Thermal',Weight:'5.1 kg'},rating:4.8,reviews:56,desc:'Designed for perimeter and border patrol with long-endurance dual-sensor payload.'},
+];
+const COLORS=[['#00d8ff','#00ff99'],['#ff3355','#ff9500'],['#a855f7','#00d8ff'],['#00ff99','#ffb800'],['#ffb800','#ff3355'],['#00d8ff','#a855f7']];
+
+/* ─── STATE ──────────────────────────────────────────────────── */
+let users = [{id:1,name:'Demo User',email:'demo@dronewatch.com',password:'demo123',phone:'+91 9876543210',joined:'March 2024'}];
+let sess  = JSON.parse(localStorage.getItem('dw_sess')||'null');
+let cart  = JSON.parse(localStorage.getItem('dw_cart')||'[]');
+let orders= JSON.parse(localStorage.getItem('dw_orders')||'[]');
+let filt='All', srch='', srt='', selPayMethod='COD';
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById(page).classList.add('on');
+  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
+  const nb=document.getElementById('nb-'+page);
+  if(nb)nb.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(page==='products')renderProducts();
+  if(page==='cart')renderCart();
+  if(page==='orders')renderOrders();
+  if(page==='profile')renderProfile();
+  if(page==='home')renderFeatured();
+}
+
+/* ─── DRONE SVG ──────────────────────────────────────────────── */
+function dSVG(c='#00d8ff',a='#00ff99',w=100,h=80){
+  return`<svg width="${w}" height="${h}" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="46" y="40" width="28" height="20" rx="6" fill="#0d1522" stroke="${c}" stroke-width="1.5"/>
+    <circle cx="60" cy="50" r="7" fill="#080e18" stroke="${c}" stroke-width="1"/>
+    <circle cx="60" cy="50" r="3" fill="${c}" opacity=".6"/>
+    <line x1="47" y1="45" x2="18" y2="26" stroke="#1a2e4a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="73" y1="45" x2="102" y2="26" stroke="#1a2e4a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="55" x2="18" y2="74" stroke="#1a2e4a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="73" y1="55" x2="102" y2="74" stroke="#1a2e4a" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="18" cy="25" rx="16" ry="4" fill="none" stroke="${c}" stroke-width="1.5" opacity=".85"/>
+    <ellipse cx="102" cy="25" rx="16" ry="4" fill="none" stroke="${c}" stroke-width="1.5" opacity=".85"/>
+    <ellipse cx="18" cy="75" rx="16" ry="4" fill="none" stroke="${a}" stroke-width="1.5" opacity=".85"/>
+    <ellipse cx="102" cy="75" rx="16" ry="4" fill="none" stroke="${a}" stroke-width="1.5" opacity=".85"/>
+    <circle cx="18" cy="25" r="3.5" fill="${c}" opacity=".6"/>
+    <circle cx="102" cy="25" r="3.5" fill="${c}" opacity=".6"/>
+    <circle cx="18" cy="75" r="3.5" fill="${a}" opacity=".6"/>
+    <circle cx="102" cy="75" r="3.5" fill="${a}" opacity=".6"/>
+    <rect x="53" y="58" width="14" height="9" rx="3" fill="#080e18" stroke="${c}" stroke-width="1"/>
+    <circle cx="60" cy="62.5" r="3" fill="${c}" opacity=".4"/>
+  </svg>`;
+}
+
+/* ─── CARD HTML ──────────────────────────────────────────────── */
+function cardHTML(d){
+  const[c,a]=COLORS[(d.id-1)%COLORS.length];
+  const disc=Math.round((1-d.price/d.orig)*100);
+  return`<div class="dcard">
+    <div class="dcard-img">
+      ${dSVG(c,a,110,88)}
+      <div class="dcard-badge">${d.badge}</div>
+    </div>
+    <div class="dcard-body">
+      <div class="dcard-cat">${d.cat}</div>
+      <div class="dcard-name">${d.name}</div>
+      <div class="specs-grid">${Object.entries(d.specs).map(([k,v])=>`<div class="spec"><div class="sk">${k.toUpperCase()}</div><div class="sv">${v}</div></div>`).join('')}</div>
+      <div class="price-row">
+        <div>
+          <span class="price">₹${d.price.toLocaleString('en-IN')}</span>
+          <span class="price-old">₹${d.orig.toLocaleString('en-IN')}</span>
+          <span class="disc">${disc}% OFF</span>
+        </div>
+        <div class="rating">⭐ ${d.rating}<span style="color:var(--muted);margin-left:.2rem">(${d.reviews})</span></div>
+      </div>
+    </div>
+    <div class="dcard-foot">
+      <button class="btn-cart-s" onclick="addCart(${d.id})">🛒 Add to Cart</button>
+      <button class="btn-buy-s" onclick="buyNow(${d.id})">Buy Now</button>
+    </div>
+  </div>`;
+}
+
+function renderFeatured(){
+  const el=document.getElementById('featured-grid');
+  if(el)el.innerHTML=DRONES.slice(0,3).map(cardHTML).join('');
+}
+
+/* ─── PRODUCT FILTERS ────────────────────────────────────────── */
+function renderProducts(){
+  let list=[...DRONES];
+  if(filt!=='All')list=list.filter(d=>d.cat===filt);
+  if(srch)list=list.filter(d=>d.name.toLowerCase().includes(srch.toLowerCase()));
+  if(srt==='asc')list.sort((a,b)=>a.price-b.price);
+  if(srt==='desc')list.sort((a,b)=>b.price-a.price);
+  if(srt==='rate')list.sort((a,b)=>b.rating-a.rating);
+  const g=document.getElementById('products-grid');
+  g.innerHTML=list.length?list.map(cardHTML).join(''):'<p style="color:var(--muted);text-align:center;grid-column:1/-1;padding:3rem">No drones found.</p>';
+}
+function filterBy(cat,el){
+  filt=cat;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');renderProducts();
+}
+function searchBy(v){srch=v;renderProducts();}
+function sortBy(v){srt=v;renderProducts();}
+
+/* ─── CART ───────────────────────────────────────────────────── */
+function saveCart(){localStorage.setItem('dw_cart',JSON.stringify(cart));}
+
+function addCart(id){
+  if(!sess){openAuth('login');toast('Please login to add items 🔐','err');return;}
+  const ex=cart.find(i=>i.id===id);
+  if(ex)ex.qty++;
+  else cart.push({id,qty:1});
+  saveCart();updateBadge();
+  toast('Added to cart! 🛒','ok');
+}
+
+function buyNow(id){addCart(id);go('cart');}
+
+function updateBadge(){
+  const n=cart.reduce((s,i)=>s+i.qty,0);
+  const b=document.getElementById('cbadge');
+  b.textContent=n;b.style.display=n>0?'flex':'none';
+}
+
+function renderCart(){
+  if(!sess){
+    document.getElementById('cart-content').innerHTML=`<div class="empty"><p>Sign in to view your cart</p><button class="btn-pri" onclick="openAuth('login')" style="padding:.65rem 1.6rem">Login</button></div>`;
+    return;
+  }
+  if(!cart.length){
+    document.getElementById('cart-content').innerHTML=`<div class="empty"><p>Your cart is empty</p><button class="btn-pri" onclick="go('products')" style="padding:.65rem 1.6rem">Browse Drones</button></div>`;
+    return;
+  }
+  const sub=cart.reduce((s,i)=>{const d=DRONES.find(x=>x.id===i.id);return s+d.price*i.qty;},0);
+  const gst=Math.round(sub*.18);
+  const ship=sub>100000?0:2999;
+  const total=sub+gst+ship;
+  const itemsHTML=cart.map(i=>{
+    const d=DRONES.find(x=>x.id===i.id);
+    const[c,a]=COLORS[(d.id-1)%COLORS.length];
+    return`<div class="ci">
+      <div class="ci-img">${dSVG(c,a,80,62)}</div>
+      <div class="ci-info">
+        <div class="ci-name">${d.name}</div>
+        <div class="ci-cat">${d.cat}</div>
+        <div class="ci-price">₹${d.price.toLocaleString('en-IN')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.6rem">
+        <div class="qty">
+          <div class="qbtn" onclick="updQty(${d.id},${i.qty-1})">−</div>
+          <div class="qval">${i.qty}</div>
+          <div class="qbtn" onclick="updQty(${d.id},${i.qty+1})">+</div>
+        </div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--green)">₹${(d.price*i.qty).toLocaleString('en-IN')}</div>
+        <button class="rmbtn" onclick="remCart(${d.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('cart-content').innerHTML=`
+    <div class="cart-layout">
+      <div class="cart-list">${itemsHTML}</div>
+      <div class="summary">
+        <h3>Order Summary</h3>
+        <div class="srow"><span>Subtotal</span><span>₹${sub.toLocaleString('en-IN')}</span></div>
+        <div class="srow"><span>GST (18%)</span><span>₹${gst.toLocaleString('en-IN')}</span></div>
+        <div class="srow"><span>Shipping</span><span>${ship===0?'<span style="color:var(--green)">FREE</span>':'₹'+ship.toLocaleString('en-IN')}</span></div>
+        <div class="srow total"><span>Total</span><span>₹${total.toLocaleString('en-IN')}</span></div>
+        <button class="chk-btn" onclick="openCheckout(${total})">Proceed to Checkout →</button>
+        <p style="font-size:.67rem;color:var(--muted);text-align:center;margin-top:.6rem">🔒 Secure encrypted checkout</p>
+      </div>
+    </div>`;
+}
+
+function updQty(id,qty){
+  if(qty<=0){remCart(id);return;}
+  const i=cart.find(x=>x.id===id);
+  if(i)i.qty=qty;
+  saveCart();renderCart();updateBadge();
+}
+function remCart(id){
+  cart=cart.filter(x=>x.id!==id);
+  saveCart();renderCart();updateBadge();
+  toast('Item removed','ok');
+}
+
+/* ─── CHECKOUT ───────────────────────────────────────────────── */
+function openCheckout(total){
+  document.getElementById('co-total').textContent='₹'+total.toLocaleString('en-IN');
+  document.getElementById('co-modal').style.display='flex';
+}
+function selPay(el,m){
+  document.querySelectorAll('.pm').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');selPayMethod=m;
+}
+function placeOrder(){
+  const addr=document.getElementById('co-addr').value.trim();
+  if(!addr){toast('Please enter delivery address','err');return;}
+  const sub=cart.reduce((s,i)=>{const d=DRONES.find(x=>x.id===i.id);return s+d.price*i.qty;},0);
+  const gst=Math.round(sub*.18);const ship=sub>100000?0:2999;
+  const order={
+    id:'ORD-'+Date.now(),
+    items:cart.map(i=>{const d=DRONES.find(x=>x.id===i.id);return{name:d.name,qty:i.qty,price:d.price};}),
+    total:sub+gst+ship,address:addr,payment:selPayMethod,
+    status:'Confirmed',date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+  };
+  orders.unshift(order);
+  localStorage.setItem('dw_orders',JSON.stringify(orders));
+  cart=[];saveCart();updateBadge();
+  closeModal('co-modal');
+  toast('Order placed! ID: '+order.id+' 🎉','ok');
+  go('orders');
+}
+
+/* ─── ORDERS ─────────────────────────────────────────────────── */
+function renderOrders(){
+  if(!sess){document.getElementById('orders-content').innerHTML=`<div class="empty"><p>Sign in to view your orders</p><button class="btn-pri" onclick="openAuth('login')" style="padding:.65rem 1.6rem">Login</button></div>`;return;}
+  const ul=orders.filter(o=>o.userId===sess.id||true); // show all for demo
+  if(!ul.length){document.getElementById('orders-content').innerHTML=`<div class="empty"><p>No orders yet</p><button class="btn-pri" onclick="go('products')" style="padding:.65rem 1.6rem">Shop Now</button></div>`;return;}
+  document.getElementById('orders-content').innerHTML=ul.map(o=>`
+    <div class="ocard">
+      <div class="ohead"><span class="oid">${o.id}</span><span class="ostatus">${o.status}</span></div>
+      <div class="oitems">${o.items.map(i=>`${i.name} × ${i.qty}`).join(' · ')}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.35rem">Payment: ${o.payment} · ${o.date}</div>
+      <div class="ototal">₹${o.total.toLocaleString('en-IN')}</div>
+    </div>`).join('');
+}
+
+/* ─── PROFILE ────────────────────────────────────────────────── */
+function renderProfile(){
+  if(!sess){go('home');openAuth('login');return;}
+  const init=sess.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('pav').textContent=init;
+  document.getElementById('pname').textContent=sess.name;
+  document.getElementById('pemail').textContent=sess.email;
+  document.getElementById('pf-name').value=sess.name;
+  document.getElementById('pf-email').value=sess.email;
+  document.getElementById('pf-phone').value=sess.phone||'';
+  document.getElementById('pf-since').textContent=sess.joined||'2024';
+}
+
+/* ─── AUTH ───────────────────────────────────────────────────── */
+function openAuth(mode='login'){
+  document.getElementById('auth-modal').style.display='flex';
+  switchAuth(mode);
+}
+function switchAuth(m){
+  document.getElementById('login-pane').style.display=m==='login'?'block':'none';
+  document.getElementById('reg-pane').style.display=m==='register'?'block':'none';
+}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+function doLogin(){
+  const email=document.getElementById('le').value.trim();
+  const pass=document.getElementById('lp').value;
+  const err=document.getElementById('lerr');
+  err.style.display='none';
+  const u=users.find(x=>x.email===email&&x.password===pass);
+  if(!u){err.textContent='Invalid email or password.';err.style.display='block';return;}
+  setSess(u);closeModal('auth-modal');
+  toast('Welcome back, '+u.name+'! 🚀','ok');
+}
+
+function doRegister(){
+  const name=document.getElementById('rn').value.trim();
+  const email=document.getElementById('re').value.trim();
+  const pass=document.getElementById('rp').value;
+  const phone=document.getElementById('rph').value.trim();
+  const err=document.getElementById('rerr');
+  err.style.display='none';
+  if(!name||!email||!pass){err.textContent='Please fill all fields.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(users.find(u=>u.email===email)){err.textContent='Email already registered.';err.style.display='block';return;}
+  const nu={id:Date.now(),name,email,password:pass,phone,joined:new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'})};
+  users.push(nu);
+  setSess(nu);closeModal('auth-modal');
+  toast('Account created! Welcome, '+name+' 🎉','ok');
+}
+
+function setSess(u){
+  sess={id:u.id,name:u.name,email:u.email,phone:u.phone,joined:u.joined};
+  localStorage.setItem('dw_sess',JSON.stringify(sess));
+  document.getElementById('auth-area').style.display='none';
+  document.getElementById('user-area').style.display='flex';
+  document.getElementById('uname-btn').textContent='👤 '+u.name.split(' ')[0];
+}
+
+function logout(){
+  sess=null;localStorage.removeItem('dw_sess');
+  document.getElementById('auth-area').style.display='flex';
+  document.getElementById('user-area').style.display='none';
+  go('home');toast('Logged out successfully','ok');
+}
+
+/* ─── CONTACT ────────────────────────────────────────────────── */
+function sendContact(){
+  const n=document.getElementById('cn').value.trim();
+  const e=document.getElementById('ce').value.trim();
+  const m=document.getElementById('cm').value.trim();
+  if(!n||!e||!m){toast('Please fill all required fields','err');return;}
+  toast('Message received! We\'ll reply within 24 hours ✔','ok');
+  ['cn','ce','cm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cs').value='';
+}
+
+/* ─── TOAST ──────────────────────────────────────────────────── */
+let tTimer;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.className=type;
+  el.innerHTML=(type==='ok'?'✅':'❌')+' '+msg;
+  el.style.display='flex';
+  clearTimeout(tTimer);
+  tTimer=setTimeout(()=>el.style.display='none',3400);
+}
+
+/* ─── CLOSE OVERLAYS ON BACKDROP CLICK ──────────────────────── */
+['auth-modal','co-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){
+    if(e.target===this)closeModal(id);
+  });
+});
+
+/* ─── INIT ───────────────────────────────────────────────────── */
+(function(){
+  if(sess){setSess(sess);}
+  updateBadge();
+  renderFeatured();
+})();
+</script>
+</body>
+</html>
